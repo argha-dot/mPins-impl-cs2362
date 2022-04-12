@@ -1,0 +1,42 @@
+\documentclass[]{article}   % list options between brackets
+\setlength{\parskip}{\baselineskip}%
+\setlength{\parindent}{0pt}%
+\usepackage{hyperref}              % list packages between braces
+
+% type user-defined commands here
+
+\begin{document}
+
+\title{CS2361: Blockchain and Cryptocurrencies\\ Project Milestone 1: M-Pin}   % type title between braces
+\author{Argha Chakrabarty \and Aarav Varshney}         % type author(s) between braces
+\date{April 13, 2022}    % type date between braces
+\maketitle
+
+\section*{Introduction}
+We need authentication for primarily three reasons:
+\begin{itemize}
+    \item authenticate the client to the server,
+    \item authenticate the server to the client, 
+    \item and should result in a negotiated encryption key with which subsequent communications can be encrypted.
+\end{itemize}
+Until now we've been using Username/Password authentication for authenticating the client and the use of SSL/TLS protocols for authenticating the server. SSL even though now deprecated still had some good ideas but the Username/Password is extremely vulnerable to exploits and that's why there is a massive shift to Multi Factor Authentication (MFA). 
+
+The biggest exploit for username/password authentication is that the server stores either the hashe of the password or the password itself in the database which if compromised can be used to gain access to the passwords. 
+
+The idea behind M-Pin is that each registered client is issued with a large cryptographic secret. They then prove to the server that they are in possession of this secret using a zero-knowledge proof. This removes the requirement for any information related to client secrets to be stored on the server. 
+
+Another crucial attribute of M-Pin is the use of third party authentication. Similar to how SSL uses a CA to verify the certificates, M-Pin uses Trusted Authority (TA) to store the secrets in contrast to Username/Password where the server performs regular operations as well as authentication. 
+\newpage
+\section*{Plan for the Project}
+\newpage
+\section*{Technical Details}
+Our implmentation of M-Pin involves 
+\newpage
+\section*{Future Ideas / Plans for expansions}
+
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\end{document}
