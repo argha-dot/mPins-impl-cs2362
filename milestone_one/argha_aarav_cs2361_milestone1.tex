@@ -16,96 +16,106 @@
 \section*{Introduction}
 We need authentication for primarily three reasons:
 \begin{itemize}
-    \itemsep0em 
+    \itemsep0em
     \item authenticate the client to the server,
-    \item authenticate the server to the client, 
+    \item authenticate the server to the client,
     \item and should result in a negotiated encryption key with which subsequent communications can be encrypted.
 \end{itemize}
-Until now we've been using Username/Password authentication for authenticating the client and the use of SSL/TLS protocols for authenticating the server. SSL even though now deprecated still had some good ideas but the Username/Password is extremely vulnerable to exploits and that's why there is a massive shift to Multi Factor Authentication (MFA). 
+Until now we've been using Username/Password authentication for authenticating the client and the use of SSL/TLS protocols for authenticating the server. SSL even though now deprecated still had some good ideas but the Username/Password is extremely vulnerable to exploits and that's why there is a massive shift to Multi Factor Authentication (MFA).
 
-The biggest exploit for username/password authentication is that the server stores either the hash of the password or the password itself in the database which if compromised can be used to gain access to the passwords. 
+The biggest exploit for username/password authentication is that the server stores either the hash of the password or the password itself in the database which if compromised can be used to gain access to the passwords.
 
-The idea behind M-Pin is that each registered client is issued with a large cryptographic secret. They then prove to the server that they are in possession of this secret using a zero-knowledge proof. This removes the requirement for any information related to client secrets to be stored on the server. 
+The idea behind M-Pin is that each registered client is issued with a large cryptographic secret. They then prove to the server that they are in possession of this secret using a zero-knowledge proof. This removes the requirement for any information related to client secrets to be stored on the server.
 
-Another crucial attribute of M-Pin is the use of third party authentication. Similar to how SSL uses a CA to verify the certificates, M-Pin uses Trusted Authority (TA) to store the secrets in contrast to Username/Password where the server performs regular operations as well as authentication. 
+Another crucial attribute of M-Pin is the use of third party authentication. Similar to how SSL uses a CA to verify the certificates, M-Pin uses Trusted Authority (TA) to store the secrets in contrast to Username/Password where the server performs regular operations as well as authentication.
 
 \newpage
 \section*{Technical Details}
 \begin{itemize}
     \item Pairing Based Cryptography: It is based on pairing functions that map pairs of points on an elliptic curve into a finite field.
-    \item Identity Based Encryption: When communicating with someone using their public key, there is always a concern whether the public key belongs to intended party or some adversary. We see the usage of CAs to verify the legitimacy of the public key in PKIs. IBE proposed that the public key should be composed of some identifying information such as email address. 
-    \item  Replay Attack: The attacker can capture the encrypted message sent to a trusted party and send it again at a later time. For instance, if an attacker captures a request for a financial txn, they can send the request again to make another txn. 
+    \item Identity Based Encryption: When communicating with someone using their public key, there is always a concern whether the public key belongs to intended party or some adversary. We see the usage of CAs to verify the legitimacy of the public key in PKIs. IBE proposed that the public key should be composed of some identifying information such as email address.
+    \item  Replay Attack: The attacker can capture the encrypted message sent to a trusted party and send it again at a later time. For instance, if an attacker captures a request for a financial txn, they can send the request again to make another txn.
 \end{itemize}
-The process for authentication is as follows: 
+The process for authentication is as follows:
 \begin{enumerate}
-    \item Key Generation: The client computes point A on the eclipse curve using a $ID_a$ which is then sent to the TA to get client secret key sA where s is a master secret stored in the TA. 
-    \begin{enumerate}
-        \item Notations: 
-        \begin{enumerate}
-            \item $ID_a$: The client's email address.
-            \item $H_1$ a hash function which maps to a point on $G_1$
-            \item $H_2$ a hash function which maps to a point on $G_2$
-            \item $e: G_1 \times  G_2 \rightarrow Z_q$
-            \item sA: The client's secret key.
-        \end{enumerate}
-        \item Process: 
-        \begin{enumerate}
-            \item Client: $A \leftarrow H_1(ID_a) $
-            \item TA: Calculates $sA$
-            \item Client: The client calculates the token $((s-\alpha)A)$ using his own PIN $(\alpha)$ and stores the token in local storage. 
-        \end{enumerate}
-    \end{enumerate}
-    \item Time Permit: Added layer of security to the client's authentication. The client sends a time permit to the server which is also individually calculated by the server. 
-    \begin{enumerate}
-        \item Notations:
-        \begin{enumerate}
-            \item $T_i$: Today's date.
-            \item $T$: The client's time permit.
-        \end{enumerate}
-        \item Process:
-        \begin{enumerate}
-            \item Client: $T \leftarrow H_1(T_i|ID_a)$
-            \item TA: Calculates $sT$
-            \item Client: Stores sT in local storage.
-        \end{enumerate}
-    \end{enumerate}
+    \item Key Generation: The client computes point A on the eclipse curve using a $ID_a$ which is then sent to the TA to get client secret key sA where s is a master secret stored in the TA.
+          \begin{enumerate}
+              \item Notations:
+                    \begin{enumerate}
+                        \item $ID_a$: The client's email address.
+                        \item $H_1$ a hash function which maps to a point on $G_1$
+                        \item $H_2$ a hash function which maps to a point on $G_2$
+                        \item $e: G_1 \times  G_2 \rightarrow Z_q$
+                        \item sA: The client's secret key.
+                    \end{enumerate}
+              \item Process:
+                    \begin{enumerate}
+                        \item Client: $A \leftarrow H_1(ID_a) $
+                        \item TA: Calculates $sA$
+                        \item Client: The client calculates the token $((s-\alpha)A)$ using his own PIN $(\alpha)$ and stores the token in local storage.
+                    \end{enumerate}
+          \end{enumerate}
+    \item Time Permit: Added layer of security to the client's authentication. The client sends a time permit to the server which is also individually calculated by the server.
+          \begin{enumerate}
+              \item Notations:
+                    \begin{enumerate}
+                        \item $T_i$: Today's date.
+                        \item $T$: The client's time permit.
+                    \end{enumerate}
+              \item Process:
+                    \begin{enumerate}
+                        \item Client: $T \leftarrow H_1(T_i|ID_a)$
+                        \item TA: Calculates $sT$
+                        \item Client: Stores sT in local storage.
+                    \end{enumerate}
+          \end{enumerate}
     \item Authentication: Communication between the client and the server takes place.
-    \begin{enumerate}
-        \item Notations:
-        \begin{enumerate}
-            \item 'x' a random number in $Z_q$
-            \item 'y' a random number in $Z_q$
-        \end{enumerate}
-        \item Process:
-        \begin{enumerate}
-            \item Client: Receives pin $\alpha$ from the user, picks x.
-            \item Client: Computes $D \leftarrow A + T$, $U \leftarrow xD$.
-            \item Client: Sends \{$ID_a, U$\} to the server.
-            \item Server: Sends y to the client.
-            \item Client: Computes $V \leftarrow -(x+y)((s-\alpha)A +\alpha A+sT)$ and sends V to the server.
-            \item Server: Computes $D \leftarrow H_1(ID_a)+H_1(T_i||ID_a)$ and \newline $g \leftarrow e(V,Q)e(U+yD,sQ)$.
-            \item If $g = 1$ then the client is authenticated.
-        \end{enumerate}
-    \end{enumerate}
+          \begin{enumerate}
+              \item Notations:
+                    \begin{enumerate}
+                        \item 'x' a random number in $Z_q$
+                        \item 'y' a random number in $Z_q$
+                    \end{enumerate}
+              \item Process:
+                    \begin{enumerate}
+                        \item Client: Receives pin $\alpha$ from the user, picks x.
+                        \item Client: Computes $D \leftarrow A + T$, $U \leftarrow xD$.
+                        \item Client: Sends \{$ID_a, U$\} to the server.
+                        \item Server: Sends y to the client.
+                        \item Client: Computes $V \leftarrow -(x+y)((s-\alpha)A +\alpha A+sT)$ and sends V to the server.
+                        \item Server: Computes $D \leftarrow H_1(ID_a)+H_1(T_i||ID_a)$ and \newline $g \leftarrow e(V,Q)e(U+yD,sQ)$.
+                        \item If $g = 1$ then the client is authenticated.
+                    \end{enumerate}
+          \end{enumerate}
 \end{enumerate}
 The entire process suffers from one flaw which is that it takes three passes between the client and the server which if the server also carries out username/password based authentication will find it difficult to change protocol. The paper titled "Milagro Multi-Factor Authentication" proposes e-M-Pin that uses a single pass between the client and the server.
 
 The one pass authentication poses the problem of Replay Attack which is why we now also use current time: a) CCT: Current Client Time, b) SCT: Current Server Time and a single use arbitary number, nonce.
 
-The new process is only slightly different: 
+The new process is only slightly different:
 \begin{enumerate}
     \item The client now also generates a nonce in $Z_q$ along with x and stores the current time.
     \item y is now computed as: $y \leftarrow H_q (ID_a || U || W || nonce || CCT).$
     \item and the client sends: {IDa,U,W,V,nonce,CCT} to the server.
-    \item The server first checks if the SCT - CCT falls within the expiration time (t) else fail the authentication. Secondly, verify if the nonce has been used already or not. 
+    \item The server first checks if the SCT - CCT falls within the expiration time (t) else fail the authentication. Secondly, verify if the nonce has been used already or not.
     \item Finally, save the nonce and calculate y as \newline $y \leftarrow H_q (ID_a || U || W || nonce || CCT).$
 \end{enumerate}
 
 \newpage
 \section*{Plan for the Project}
+Our major inspiration for implementation of the project comes from the implementation by \href{https://web.archive.org/web/20161107110119/http://docs.milagro.io/en/mfa/getting-started/milagro-mfa-developer-guide.html}{Apache's Milagro MFA} which although is now deprecated but has clear implementation ideas.
 \begin{enumerate}
     \item Client Side:
+        \begin{enumerate}
+            \item We have created the client side for the app in React.js.
+            \item The client handles the input of the pin and the id (email) after which communication takes place between the TA to compute client secret. We primarily use \href{https://www.npmjs.com/package/crypto-js}{ crypto-js } for the computation of the tokens and keys.
+        \end{enumerate}
     \item Server Side:
+    \begin{enumerate}
+        \item Due to ease of availabilty of crypto libraries and elliptic curve libraries, we are using Python to build our server.
+        \item The server also communicates with a small mongo database to store client ids, nonce which are deleted after expiry. 
+        \item We store the server secret in server. The server returns a response with a success or failure message based on the result of authentication. 
+    \end{enumerate}
     \item TA:
 \end{enumerate}
 \newpage
