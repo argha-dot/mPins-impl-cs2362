@@ -4,14 +4,17 @@
 \usepackage{enumitem}
 \usepackage{hyperref}              % list packages between braces
 \usepackage{amsfonts}
+\usepackage{amsmath}
+% to use includegraphics
+\usepackage{graphicx}
 
 % type user-defined commands here
 
 \begin{document}
 
-\title{CS2361: Blockchain and Cryptocurrencies\\ Project Milestone 1: M-Pin}   % type title between braces
+\title{CS2361: Blockchain and Cryptocurrencies\\ Project Report: M-Pin}   % type title between braces
 \author{Argha Chakrabarty \and Aarav Varshney}         % type author(s) between braces
-\date{April 13, 2022}    % type date between braces
+\date{May 1, 2022}    % type date between braces
 \maketitle
 
 \section*{Introduction}
@@ -73,20 +76,15 @@ Communication between the client and the server takes place.
     \item Server: Computes $D \leftarrow H_1(ID_a)$ and \newline $g \leftarrow e(V,Q)e(U+yD,sQ)$.
     \item If $g = 1$ then the client is authenticated.
 \end{enumerate}
-
+\includegraphics[width=\textwidth]{./mpin-process.png}
 \newpage
 \section*{Analysis}
 \subsection*{Security}
 \begin{itemize}
     \item The server does not store user's hashed password or any detail that may compromise their identity on the platform. 
     \item There are two points of failure. An adversary even if acquire user's pin they would still require the token to generate the client secret. 
-    \item  "The security of our system is based on a natural analogue
-    of the computational Diffie-Hellman assumption on elliptic curves."
-    \item "Based on this assumption we show that the new system has chosen ciphertext security in the random oracle model"
-    \item "There is no efficiently computable $\psi$:G2$\rightarrow$G1 in Type 3 Pairing. \\
-    (https://eprint.iacr.org/2006/165.pdf)"
-
-    \item The pairing allows us to assume Symmentric External Diffie-Helman (SXDH) assumption which futher imposes a set of assumption:
+    \item There is no efficiently computable $\psi$:G2$\rightarrow$G1 in Type 3 Pairing. \cite{Steven:2013}
+    \item The type-3 pairing allows us to assume Symmentric External \\ Diffie-Helman (SXDH) assumption which futher imposes a set of assumption:
     \begin{itemize}
         \item The discrete logarithm problem (DLP), the computational Diffie-Hellman problem (CDH), and the computational co-Diffie-Hellman problem are all intractable in ${\displaystyle {\mathbb {G} }_{1}}$ and$ {\displaystyle {\mathbb {G} }_{2}} $
         \item There exists an efficiently computable bilinear map  \\(pairing) ${\displaystyle e(\cdot ,\cdot ):{\mathbb {G} }_{1}\times {\mathbb {G} }_{2}\rightarrow {\mathbb {G} }_{T}} $
@@ -94,12 +92,19 @@ Communication between the client and the server takes place.
         ${\displaystyle {\mathbb {G} }_{1}}$ and ${\mathbb {G} }_{2}.$
     \end{itemize}
 
-    \item "er (aP, bQ) = er $(P, Q)^ab$ for all a, b $\in$ Fr (Bilinearity)
-    \item er (P, P ) = 1" Non-supersingular curves where there is no bilinear pairing between points in the same subgroup that yields a non-trivial result i.e er (P, P ) = 1 
-    \item We use BN-254 Elliptic Curve to implement M-Pin. The curve has an embedding degree of 12 and is know to be secure and calculating pairing is efficient and is used by Aztec for Ethereum.\\
-    (https://github.com/AztecProtocol/weierstrudel)
+    \item er (aP, bQ) = er $(P, Q)^ab$ for all a, b $\in$ Fr (Bilinearity)
+    \item We use BN-254 Elliptic Curve to implement M-Pin. The curve has an embedding degree of 12 and is know to be secure and calculating pairing is efficient and is used by Aztec for Ethereum. \cite{Aztec:2013}
 
-
+\subsection*{Verification}
+The server can verify the authenticity of the client by calculating $$g=e(V, Q).e(U + yA, sQ)$$. If $g=1$ then the client is authenticated.
+\begin{align*}
+    g &= e(V, Q)e(U + yA, sQ) \\
+    &= e(-(x+y)((s-\alpha)A +\alpha A), sQ).e(U + yA, sQ) \\
+    &= e(-(x+y)(sA), Q).e(xA + yA, sQ) \\
+    &= e(-(x+y)(A), sQ).e((x + y)A, sQ) \\
+    &= e((x+y)(A), sQ)^{-1}.e((x+y)A, sQ) \\
+    &= 1
+\end{align*}
 
 
 \end{itemize}
@@ -147,6 +152,16 @@ Beforehand, the groups $G_1, G_2$ and $G_T$ are fixed. Along with $G_1, G_2$ and
     \end{enumerate}
     
 \end{enumerate}
+
+\section*{Links}
+\subsection*{Backend}
+Github: \url{https://github.com/aarav22/mpin-backend} \\
+Hosted: \url{3.108.58.123}
+\subsection*{Frontend}
+Github: \url{https://github.com/argha-dot/mPins-frontend} \\
+Hosted: \url{3.110.108.83:5000}
+\subsection*{Video}
+
 
 
 \nocite{*}
