@@ -3,6 +3,7 @@
 \setlength{\parindent}{0pt}%
 \usepackage{enumitem}
 \usepackage{hyperref}              % list packages between braces
+\usepackage{amsfonts}
 
 % type user-defined commands here
 
@@ -31,77 +32,78 @@ Another crucial attribute of M-Pin is the use of third party authentication. Sim
 
 \newpage
 \section*{Technical Details}
+\subsection*{Concepts Utilized}
 \begin{itemize}
     \item Pairing Based Cryptography: It is based on pairing functions that map pairs of points on an elliptic curve into a finite field.
     \item Identity Based Encryption: When communicating with someone using their public key, there is always a concern whether the public key belongs to intended party or some adversary. We see the usage of CAs to verify the legitimacy of the public key in PKIs. IBE proposed that the public key should be composed of some identifying information such as email address.
     \item  Replay Attack: The attacker can capture the encrypted message sent to a trusted party and send it again at a later time. For instance, if an attacker captures a request for a financial txn, they can send the request again to make another txn.
 \end{itemize}
-The process for authentication is as follows:
+\subsection*{Working of M-Pin}
+\subsubsection*{Notations}
+\begin{itemize}
+    \item $ID_a$: The client's email address.
+    \item q denotes the size of the field over which our elliptic curve E is defined.
+    \item $G_1$ is a subgroup of $E(F_q )$, $G_2$ is a subgroup of $E(F_{q^k} )$, where k is a parameter  called the embedding degree.
+    \item $H_1$ a hash function which maps to a point on $G_1$
+    \item $H_2$ a hash function which maps to a point on $G_2$
+    \item $e: G_1 \times  G_2 \rightarrow $$\mathbb{Z}_q$
+    \item s $\in$ $\mathbb{Z}_q$: The master secret stored with the TA.
+    \item sA: The client's secret key.
+    \item 'x' a random number in $Z_q$
+    \item 'y' a random number in $Z_q$
+\end{itemize}
+\newpage
+\subsubsection*{Step 1: Key Generation}
+The client computes point A on the eclipse curve using a $ID_a$ which is then sent to the TA to get client secret key sA where s is a master secret stored in the TA.
+\paragraph*{Process}
 \begin{enumerate}
-    \item Key Generation: The client computes point A on the eclipse curve using a $ID_a$ which is then sent to the TA to get client secret key sA where s is a master secret stored in the TA.
-          \begin{enumerate}
-              \item Notations:
-                    \begin{enumerate}
-                        \item $ID_a$: The client's email address.
-                        \item $H_1$ a hash function which maps to a point on $G_1$
-                        \item $H_2$ a hash function which maps to a point on $G_2$
-                        \item $e: G_1 \times  G_2 \rightarrow Z_q$
-                        \item sA: The client's secret key.
-                    \end{enumerate}
-              \item Process:
-                    \begin{enumerate}
-                        \item Client: $A \leftarrow H_1(ID_a) $
-                        \item TA: Calculates $sA$
-                        \item Client: The client calculates the token $((s-\alpha)A)$ using his own PIN $(\alpha)$ and stores the token in local storage.
-                    \end{enumerate}
-          \end{enumerate}
-    \item Time Permit: Added layer of security to the client's authentication. The client sends a time permit to the server which is also individually calculated by the server.
-          \begin{enumerate}
-              \item Notations:
-                    \begin{enumerate}
-                        \item $T_i$: Today's date.
-                        \item $T$: The client's time permit.
-                    \end{enumerate}
-              \item Process:
-                    \begin{enumerate}
-                        \item Client: $T \leftarrow H_1(T_i|ID_a)$
-                        \item TA: Calculates $sT$
-                        \item Client: Stores sT in local storage.
-                    \end{enumerate}
-          \end{enumerate}
-    \item Authentication: Communication between the client and the server takes place.
-          \begin{enumerate}
-              \item Notations:
-                    \begin{enumerate}
-                        \item 'x' a random number in $Z_q$
-                        \item 'y' a random number in $Z_q$
-                    \end{enumerate}
-              \item Process:
-                    \begin{enumerate}
-                        \item Client: Receives pin $\alpha$ from the user, picks x.
-                        \item Client: Computes $D \leftarrow A + T$, $U \leftarrow xD$.
-                        \item Client: Sends \{$ID_a, U$\} to the server.
-                        \item Server: Sends y to the client.
-                        \item Client: Computes $V \leftarrow -(x+y)((s-\alpha)A +\alpha A+sT)$ and sends V to the server.
-                        \item Server: Computes $D \leftarrow H_1(ID_a)+H_1(T_i||ID_a)$ and \newline $g \leftarrow e(V,Q)e(U+yD,sQ)$.
-                        \item If $g = 1$ then the client is authenticated.
-                    \end{enumerate}
-          \end{enumerate}
+    \item Client: $A \leftarrow H_1(ID_a) $
+    \item TA: Calculates $sA$
+    \item Client: The client calculates the token $((s-\alpha)A)$ using his own PIN $(\alpha)$ and stores the token in local storage.
 \end{enumerate}
-The entire process suffers from one flaw which is that it takes three passes between the client and the server which if the server also carries out username/password based authentication will find it difficult to change protocol. The paper titled "Milagro Multi-Factor Authentication" proposes e-M-Pin that uses a single pass between the client and the server.
-
-The one pass authentication poses the problem of Replay Attack which is why we now also use current time: a) CCT: Current Client Time, b) SCT: Current Server Time and a single use arbitary number, nonce.
-
-The new process is only slightly different:
+\subsubsection*{Step 2: Authentication}
+Communication between the client and the server takes place.
+\paragraph*{Process}
 \begin{enumerate}
-    \item The client now also generates a nonce in $Z_q$ along with x and stores the current time.
-    \item y is now computed as: $y \leftarrow H_q (ID_a || U || W || nonce || CCT).$
-    \item and the client sends: {IDa,U,W,V,nonce,CCT} to the server.
-    \item The server first checks if the SCT - CCT falls within the expiration time (t) else fail the authentication. Secondly, verify if the nonce has been used already or not.
-    \item Finally, save the nonce and calculate y as \newline $y \leftarrow H_q (ID_a || U || W || nonce || CCT).$
+    \item Client: Receives pin $\alpha$ from the user, picks x.
+    \item Client: Computes $U \leftarrow xA$.
+    \item Client: Sends \{$ID_a, U$\} to the server.
+    \item Server: Sends y to the client.
+    \item Client: Computes $V \leftarrow -(x+y)((s-\alpha)A +\alpha A)$ and sends V to the server.
+    \item Server: Computes $D \leftarrow H_1(ID_a)$ and \newline $g \leftarrow e(V,Q)e(U+yD,sQ)$.
+    \item If $g = 1$ then the client is authenticated.
 \end{enumerate}
 
 \newpage
+\section*{Analysis}
+\subsection*{Security}
+\begin{itemize}
+    \item The server does not store user's hashed password or any detail that may compromise their identity on the platform. 
+    \item There are two points of failure. An adversary even if acquire user's pin they would still require the token to generate the client secret. 
+    \item  "The security of our system is based on a natural analogue
+    of the computational Diffie-Hellman assumption on elliptic curves."
+    \item "Based on this assumption we show that the new system has chosen ciphertext security in the random oracle model"
+    \item "There is no efficiently computable $\psi$:G2$\rightarrow$G1 in Type 3 Pairing. \\
+    (https://eprint.iacr.org/2006/165.pdf)"
+
+    \item The pairing allows us to assume Symmentric External Diffie-Helman (SXDH) assumption which futher imposes a set of assumption:
+    \begin{itemize}
+        \item The discrete logarithm problem (DLP), the computational Diffie-Hellman problem (CDH), and the computational co-Diffie-Hellman problem are all intractable in ${\displaystyle {\mathbb {G} }_{1}}$ and$ {\displaystyle {\mathbb {G} }_{2}} $
+        \item There exists an efficiently computable bilinear map  \\(pairing) ${\displaystyle e(\cdot ,\cdot ):{\mathbb {G} }_{1}\times {\mathbb {G} }_{2}\rightarrow {\mathbb {G} }_{T}} $
+        \item The decisional Diffie-Hellman problem (DDH) is intractable in
+        ${\displaystyle {\mathbb {G} }_{1}}$ and ${\mathbb {G} }_{2}.$
+    \end{itemize}
+
+    \item "er (aP, bQ) = er $(P, Q)^ab$ for all a, b $\in$ Fr (Bilinearity)
+    \item er (P, P ) = 1" Non-supersingular curves where there is no bilinear pairing between points in the same subgroup that yields a non-trivial result i.e er (P, P ) = 1 
+    \item We use BN-254 Elliptic Curve to implement M-Pin. The curve has an embedding degree of 12 and is know to be secure and calculating pairing is efficient and is used by Aztec for Ethereum.\\
+    (https://github.com/AztecProtocol/weierstrudel)
+
+
+
+
+\end{itemize}
+
 \section*{Plan for the Project}
 Our major inspiration for implementation of the project comes from the implementation by \href{https://web.archive.org/web/20161107110119/http://docs.milagro.io/en/mfa/getting-started/milagro-mfa-developer-guide.html}{Apache's Milagro MFA} which although is now deprecated but has clear implementation ideas.
 
@@ -131,6 +133,19 @@ Beforehand, the groups $G_1, G_2$ and $G_T$ are fixed. Along with $G_1, G_2$ and
 \begin{enumerate}
     \item To implement mutiple TAs (DTA) to safegaurd against a single  point of failure. This is possible due to pairing based cryptography.
     \item Also, to implement a scoring based for multiple wrong attempts at authentication to prevent brute force attacks while also making the system more user friendly as suggested in the paper [3]. 
+    \item The entire process suffers from one flaw which is that it takes three passes between the client and the server which if the server also carries out username/password based authentication will find it difficult to change protocol. The paper titled "Milagro Multi-Factor Authentication" proposes e-M-Pin that uses a single pass between the client and the server.
+
+    The one pass authentication poses the problem of Replay Attack which is why we now also use current time: a) CCT: Current Client Time, b) SCT: Current Server Time and a single use arbitary number, nonce.
+    
+    The new process is only slightly different:
+    \begin{enumerate}
+        \item The client now also generates a nonce in $Z_q$ along with x and stores the current time.
+        \item y is now computed as: $y \leftarrow H_q (ID_a || U || W || nonce || CCT).$
+        \item and the client sends: {IDa,U,W,V,nonce,CCT} to the server.
+        \item The server first checks if the SCT - CCT falls within the expiration time (t) else fail the authentication. Secondly, verify if the nonce has been used already or not.
+        \item Finally, save the nonce and calculate y as \newline $y \leftarrow H_q (ID_a || U || W || nonce || CCT).$
+    \end{enumerate}
+    
 \end{enumerate}
 
 

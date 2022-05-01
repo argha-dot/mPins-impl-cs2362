@@ -294,3 +294,6 @@ TSWLatexianTemp*
 
 # xwatermark package
 *.xwm
+
+# env
+dev-env/
